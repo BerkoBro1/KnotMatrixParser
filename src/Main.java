@@ -6,7 +6,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        /*
+
         BufferedReader br = new BufferedReader(new FileReader("in.txt"));
         ArrayList<int[][]> arrays = new ArrayList<>();
         int i = Integer.parseInt(br.readLine());
@@ -29,18 +29,21 @@ public class Main {
         BufferedWriter bw = new BufferedWriter(new FileWriter("out.txt"));
 
         for(int[][] m : arrays) {
-            rref(m);
-            printMatrix(m, bw);
+            if(m.length<8) {
+                rref(m);
+                printMatrix(m, bw);
+                System.out.println("NEXT\n\n\n");
+            }
         }
 
 
         bw.flush();
         bw.close();
-        */
 
+        /*
         int[][] fourTest = {{-1, -1, 2, 0}, {-1, 2, 0, -1}, {0, -1, -1, 2}, {2, 0, -1, -1}};
         rref(fourTest);
-
+        */
     }
 
     public static void rref(int[][] matrix) {
@@ -79,18 +82,21 @@ public class Main {
             matrix[r] = temp;
 
             //**********
-            //sets lead value to 1
+            //sets lead value to the top row's lead value
             int lv = matrix[r][lead];
 
             //any number that is a factor of the numbers 1 above or below the lead value can be used to change it to 1
             int highDiff = lv + 1;
             int lowDiff = lv - 1;
 
+            //pretest
+
             //looks through each row for a value that matches that
             for (i = 0; i < rowCount; i++) {
                 //if the leading value is a factor that can get the original lead value to 1, then it will go into one of the if statements
                 if (i > r && matrix[i][lead] != 0 && lowDiff % matrix[i][lead] == 0) {
                     int factor = lowDiff / matrix[i][lead];
+                    System.out.println("Factor " + factor);
                     for (int j = 0; j < matrix[0].length; j++) {
                         matrix[r][j] -= matrix[i][j] * factor;
                     }
