@@ -106,6 +106,7 @@ public class Main {
 
 
             //**********
+            System.out.println("Top row now set to 1");
             printMatrix(matrix);
             //**********
 
@@ -118,6 +119,7 @@ public class Main {
                 }
             }
 
+            System.out.println("Row now added down");
             printMatrix(matrix);
 
             lead++;
