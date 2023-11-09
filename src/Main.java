@@ -48,6 +48,12 @@ public class Main {
     }
 
     public static void rref(int[][] matrix) {
+
+        //*************
+        System.out.println("Original matrix");
+        printMatrix(matrix);
+        //*************
+
         //current column being worked on
         int lead = 0;
 
@@ -88,6 +94,9 @@ public class Main {
             for(i = r; i < rowCount; i++) {
                 leadVals[i - r] = matrix[i][lead];
             }
+            if(leadVals.length == 2) {
+                return;
+            }
             int[] coeffs = new int[leadVals.length];
             for(i = 1; i < leadVals.length; i++) {
                 if(leadVals[i]!=0) break;
@@ -98,6 +107,7 @@ public class Main {
 
             for(i = r; i < rowCount; i++) matrix[r][i] *= coeffs[0];
             for(i = r + 1; i < rowCount; i++) {
+                if(matrix[i][r] == 0) continue;
                 for(int j = 0; j < rowCount; j++) {
                     matrix[r][j] += matrix[i][j] * coeffs[i-r];
                 }
@@ -133,8 +143,8 @@ public class Main {
         int signCounter = 0;
 
         //
-        int coeffCounter = 0;
         int base = 2;
+        int coeffCounter = (int)Math.pow(base, vals.length);
         int[] testCoeffs = new int[vals.length];
 
 
@@ -162,8 +172,8 @@ public class Main {
                 }
                 signCounter++;
             } while(signCounter < vals.length * 2);
-            coeffCounter = (Math.pow(base, vals.length) - 1 == coeffCounter) ? 0 : coeffCounter + 1;
-            if(coeffCounter == 0) base++;
+            coeffCounter = (Math.pow(base+1, vals.length) - 1 == coeffCounter) ? (int)Math.pow(++base, vals.length) : coeffCounter + 1;
+            //if(coeffCounter == 0) base++;
         }
     }
 
