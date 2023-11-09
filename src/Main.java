@@ -28,9 +28,7 @@ public class Main {
 
         BufferedWriter bw = new BufferedWriter(new FileWriter("out.txt"));
 
-        System.out.println(Arrays.toString(findCoeffs(new int[]{5, 7, 12})));
 
-        /*
         for(int[][] m : arrays) {
             if(m.length<8) {
                 rref(m);
@@ -38,7 +36,7 @@ public class Main {
                 System.out.println("NEXT\n\n\n");
             }
         }
-        */
+
 
         bw.flush();
         bw.close();
@@ -68,18 +66,47 @@ public class Main {
             //sets increment value to start at the current row
             int i = r;
 
+            //looks for the first row with a value in the lead column that isn't 0
+            while (matrix[i][lead] == 0) {
+                i++;
+                //if no non-zero value is found, the program moves on to the next column
+                if (i == rowCount) {
+                    i = r;
+                    lead++;
+                    //will return if the last column is reached
+                    if (colCount == lead)
+                        return;
+                }
+            }
+            //swaps the row that was found with the current row
+            int[] temp = matrix[i];
+            matrix[i] = matrix[r];
+            matrix[r] = temp;
+
 
             int[] leadVals = new int[rowCount - r];
             for(i = r; i < rowCount; i++) {
-                leadVals[i - rowCount] = matrix[i][lead];
+                leadVals[i - r] = matrix[i][lead];
             }
-            int[] coeffs = findCoeffs(leadVals);
+            int[] coeffs = new int[leadVals.length];
+            for(i = 1; i < leadVals.length; i++) {
+                if(leadVals[i]!=0) break;
+                if(i == leadVals.length - 1) return;
+            }
+            coeffs = findCoeffs(leadVals);
 
-            for()
+
+            for(i = r; i < rowCount; i++) matrix[r][i] *= coeffs[0];
+            for(i = r + 1; i < rowCount; i++) {
+                for(int j = 0; j < rowCount; j++) {
+                    matrix[r][j] += matrix[i][j] * coeffs[i-r];
+                }
+            }
+
 
 
             //**********
-            //printMatrix(matrix);
+            printMatrix(matrix);
             //**********
 
             for (i = r + 1; i < rowCount; i++) {
@@ -99,7 +126,6 @@ public class Main {
     }
 
     public static int[] findCoeffs(int[] vals) {
-        boolean coeffsFound = false;
 
         //sign stored in a binary number - makes them easier to increment
         int signCounter = 0;
@@ -113,7 +139,14 @@ public class Main {
         for(;;) {
             String coeffStr = Integer.toString(coeffCounter, base);
             while(coeffStr.length() < vals.length) coeffStr = "0" + coeffStr;
-            for(int i = 0; i < vals.length; i++) testCoeffs[i] = Integer.parseInt(String.valueOf(coeffStr.toCharArray()[i]));
+            for(int i = 0; i < vals.length; i++) {
+                try {
+                    testCoeffs[i] = Integer.parseInt(String.valueOf(coeffStr.toCharArray()[i]));
+                } catch(Exception e) {
+                    testCoeffs[i] = 10 + (int)coeffStr.toCharArray()[i] - 96;
+                }
+            }
+            signCounter = 0;
             do {
                 String binarySign = Integer.toBinaryString(signCounter);
                 while(binarySign.length() < vals.length) binarySign = "0" + binarySign;
@@ -123,7 +156,6 @@ public class Main {
                 for(int i = 0; i < vals.length; i++) signs[i] = signStrArr[i].equals("0") ? 1 : -1;
                 if(testCoefficients(vals, testCoeffs, signs)) {
                     for(int i = 0; i < vals.length; i++) testCoeffs[i] *= signs[i];
-                    coeffsFound = true;
                     return testCoeffs;
                 }
                 signCounter++;
