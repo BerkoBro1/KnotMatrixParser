@@ -28,6 +28,9 @@ public class Main {
 
         BufferedWriter bw = new BufferedWriter(new FileWriter("out.txt"));
 
+        System.out.println(Arrays.toString(findCoeffs(new int[]{5, 7, 12})));
+
+        /*
         for(int[][] m : arrays) {
             if(m.length<8) {
                 rref(m);
@@ -35,7 +38,7 @@ public class Main {
                 System.out.println("NEXT\n\n\n");
             }
         }
-
+        */
 
         bw.flush();
         bw.close();
@@ -64,54 +67,16 @@ public class Main {
 
             //sets increment value to start at the current row
             int i = r;
-            //looks for the first row with a value in the lead column that isn't 0
-            while (matrix[i][lead] == 0) {
-                i++;
-                //if no non-zero value is found, the program moves on to the next column
-                if (i == rowCount) {
-                    i = r;
-                    lead++;
-                    //will return if the last column is reached
-                    if (colCount == lead)
-                        return;
-                }
+
+
+            int[] leadVals = new int[rowCount - r];
+            for(i = r; i < rowCount; i++) {
+                leadVals[i - rowCount] = matrix[i][lead];
             }
-            //swaps the row that was found with the current row
-            int[] temp = matrix[i];
-            matrix[i] = matrix[r];
-            matrix[r] = temp;
+            int[] coeffs = findCoeffs(leadVals);
 
-            //**********
-            //sets lead value to the top row's lead value
-            int lv = matrix[r][lead];
+            for()
 
-            //any number that is a factor of the numbers 1 above or below the lead value can be used to change it to 1
-            int highDiff = lv + 1;
-            int lowDiff = lv - 1;
-
-            //pretest
-
-            //looks through each row for a value that matches that
-            for (i = 0; i < rowCount; i++) {
-                //if the leading value is a factor that can get the original lead value to 1, then it will go into one of the if statements
-                if (i > r && matrix[i][lead] != 0 && lowDiff % matrix[i][lead] == 0) {
-                    int factor = lowDiff / matrix[i][lead];
-                    System.out.println("Factor " + factor);
-                    for (int j = 0; j < matrix[0].length; j++) {
-                        matrix[r][j] -= matrix[i][j] * factor;
-                    }
-                    break;
-                } else if (i > r && matrix[i][lead] != 0 && highDiff % matrix[i][lead] == 0) {
-                    //the factor is how much each value needs to be multiplied by to get the lead value to 1
-                    int factor = highDiff / matrix[i][lead];
-                    for (int j = 0; j < matrix[0].length; j++) {
-                        matrix[r][j] -= matrix[i][j] * factor;
-                        //this is because if the number subtracted is the one above the original lead value, then it needs to be multiplied by -1, which is a
-                        matrix[r][j] *= -1;
-                    }
-                    break;
-                }
-            }
 
             //**********
             //printMatrix(matrix);
@@ -132,6 +97,48 @@ public class Main {
 
         }
     }
+
+    public static int[] findCoeffs(int[] vals) {
+        boolean coeffsFound = false;
+
+        //sign stored in a binary number - makes them easier to increment
+        int signCounter = 0;
+
+        //
+        int coeffCounter = 0;
+        int base = 2;
+        int[] testCoeffs = new int[vals.length];
+
+
+        for(;;) {
+            String coeffStr = Integer.toString(coeffCounter, base);
+            while(coeffStr.length() < vals.length) coeffStr = "0" + coeffStr;
+            for(int i = 0; i < vals.length; i++) testCoeffs[i] = Integer.parseInt(String.valueOf(coeffStr.toCharArray()[i]));
+            do {
+                String binarySign = Integer.toBinaryString(signCounter);
+                while(binarySign.length() < vals.length) binarySign = "0" + binarySign;
+                String[] signStrArr = new String[vals.length];
+                for(int i = 0; i < vals.length; i++) signStrArr[i] = String.valueOf(binarySign.toCharArray()[i]);
+                int[] signs = new int[vals.length];
+                for(int i = 0; i < vals.length; i++) signs[i] = signStrArr[i].equals("0") ? 1 : -1;
+                if(testCoefficients(vals, testCoeffs, signs)) {
+                    for(int i = 0; i < vals.length; i++) testCoeffs[i] *= signs[i];
+                    coeffsFound = true;
+                    return testCoeffs;
+                }
+                signCounter++;
+            } while(signCounter < vals.length * 2);
+            coeffCounter = (Math.pow(base, vals.length) - 1 == coeffCounter) ? 0 : coeffCounter + 1;
+            if(coeffCounter == 0) base++;
+        }
+    }
+
+    public static boolean testCoefficients(int[] vals, int[] coeffs, int[] signs) {
+        int sum = 0;
+        for(int i = 0; i < vals.length; i++) sum += vals[i] * coeffs[i] * signs[i];
+        return sum == 1;
+    }
+
 
     public static void printMatrix(int[][] matrix) {
         for (int[] i : matrix) {
