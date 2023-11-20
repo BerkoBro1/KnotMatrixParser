@@ -42,23 +42,26 @@ public class Main {
                 System.out.println("NEXT\n\n\n");
             }
             i++;
+            bw.flush();
         }
 
 
-        bw.flush();
         bw.close();
     }
 
     public static void rref(int[][] matrix) {
 
         //*************
-        System.out.println("Original matrix");
-        printMatrix(matrix);
+        //System.out.println("Original matrix");
+        //printMatrix(matrix);
         //*************
 
-        int[][] originalMatrix = new int[matrix.length][];
-        for(int i = 0; i < matrix.length; i++)
-            originalMatrix[i] = matrix[i].clone();
+        int[][] originalMatrix = new int[matrix.length][matrix.length];
+        for(int i = 0; i < matrix.length; i++) {
+            for(int j = 0; j < matrix.length; j++) {
+                originalMatrix[i][j] = matrix[i][j];
+            }
+        }
 
         ArrayList<ArrayList<int[]>> chains = new ArrayList<>();
 
@@ -116,7 +119,11 @@ public class Main {
             int[] coeffs = findCoeffs(leadVals, matrix, r, chains);
             if(Arrays.equals(coeffs, new int[]{0})){
                 lead = 0;
-                matrix = originalMatrix.clone();
+                for(int row = 0; row < matrix.length; row++) {
+                    for(int col = 0; col < matrix.length; col++) {
+                        matrix[row][col] = originalMatrix[row][col];
+                    }
+                }
                 r = -1;
                 continue;
             }
@@ -133,8 +140,8 @@ public class Main {
 
 
             //**********
-            System.out.println("Top row now set to 1");
-            printMatrix(matrix);
+            //System.out.println("Top row now set to 1");
+            //printMatrix(matrix);
             //**********
 
             for (i = r + 1; i < rowCount; i++) {
@@ -146,8 +153,11 @@ public class Main {
                 }
             }
 
-            System.out.println("Row now added down");
-            printMatrix(matrix);
+            //*********
+            //System.out.println("Row now added down");
+            //printMatrix(matrix);
+            //*********
+
 
             lead++;
 
@@ -191,8 +201,8 @@ public class Main {
             } while(signCounter < vals.length * 2);
             coeffCounter = (Math.pow(base+1, vals.length) - 1 == coeffCounter) ? (int)Math.pow(++base, vals.length) : coeffCounter + 1;
             //System.out.println("Coeff counter: " + coeffCounter);
-            if(coeffCounter>10000) {
-                System.out.println("no working found");
+            if(coeffCounter>50000) {
+                //System.out.println("no working found");
                 return new int[]{0};
             }
         }
@@ -237,8 +247,13 @@ public class Main {
         ArrayList<int[]> currentChain = (ArrayList<int[]>)chains.get(chains.size()-1).clone();
         for(int i = 0; i < testCoeffs.length; i++) testCoeffs[i] *= signs[i];
         currentChain.add(testCoeffs);
-        for(ArrayList<int[]> i : chains) {
-            if(i.equals(currentChain)) return false;
+        for(ArrayList<int[]> c : chains) {
+            boolean equal = true;
+            if(c.size()!=currentChain.size()) continue;
+            for(int i = 0; i < c.size(); i++) {
+                if(!Arrays.equals(c.get(i), currentChain.get(i))) equal = false;
+            }
+            if(equal) return false;
         }
         return true;
     }
