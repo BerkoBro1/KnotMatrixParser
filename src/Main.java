@@ -9,9 +9,12 @@ public class Main {
 
         BufferedReader br = new BufferedReader(new FileReader("in.txt"));
         ArrayList<int[][]> arrays = new ArrayList<>();
+        ArrayList<int[]> arrayNum = new ArrayList<>();
         int i = Integer.parseInt(br.readLine());
+        int counter = 0;
         while(i != 0) {
             arrays.add(new int[i][i]);
+            arrayNum.add(new int[]{i, ++counter});
             int indx = arrays.size()-1;
             for(int j = 0; j < i; j++) {
                 int[] nums = new int[i];
@@ -21,7 +24,9 @@ public class Main {
                 }
                 arrays.get(indx)[j] = nums;
             }
+            int temp = i;
             i = Integer.parseInt(br.readLine());
+            if(temp!=i) counter = 0;
         }
         br.close();
 
@@ -30,21 +35,18 @@ public class Main {
 
 
         for(int[][] m : arrays) {
-            if(m.length<8) {
+            if(m.length<9) {
                 rref(m);
-                printMatrix(m, bw);
+                printMatrix(m, arrayNum.get(i), bw);
+                System.out.println("Knot: " + Arrays.toString(arrayNum.get(i)));
                 System.out.println("NEXT\n\n\n");
             }
+            i++;
         }
 
 
         bw.flush();
         bw.close();
-
-        /*
-        int[][] fourTest = {{-1, -1, 2, 0}, {-1, 2, 0, -1}, {0, -1, -1, 2}, {2, 0, -1, -1}};
-        rref(fourTest);
-        */
     }
 
     public static void rref(int[][] matrix) {
@@ -53,6 +55,8 @@ public class Main {
         System.out.println("Original matrix");
         printMatrix(matrix);
         //*************
+
+        int[][] originalMatrix = 
 
         //current column being worked on
         int lead = 0;
@@ -102,8 +106,9 @@ public class Main {
                 if(leadVals[i]!=0) break;
                 if(i == leadVals.length - 1) return;
             }
-            coeffs = findCoeffs(leadVals);
+            coeffs = findCoeffs(leadVals, matrix, r);
 
+            if(Arrays.equals(coeffs, new int[]{0})) return;
 
             for(i = r; i < rowCount; i++) matrix[r][i] *= coeffs[0];
             for(i = r + 1; i < rowCount; i++) {
@@ -137,7 +142,7 @@ public class Main {
         }
     }
 
-    public static int[] findCoeffs(int[] vals) {
+    public static int[] findCoeffs(int[] vals, int[][] matrix, int r) {
 
         //sign stored in a binary number - makes them easier to increment
         int signCounter = 0;
@@ -166,14 +171,18 @@ public class Main {
                 for(int i = 0; i < vals.length; i++) signStrArr[i] = String.valueOf(binarySign.toCharArray()[i]);
                 int[] signs = new int[vals.length];
                 for(int i = 0; i < vals.length; i++) signs[i] = signStrArr[i].equals("0") ? 1 : -1;
-                if(testCoefficients(vals, testCoeffs, signs)) {
+                if(testCoefficients(vals, testCoeffs, signs) && testNextCol(testCoeffs, signs, matrix, r)) {
                     for(int i = 0; i < vals.length; i++) testCoeffs[i] *= signs[i];
                     return testCoeffs;
                 }
                 signCounter++;
             } while(signCounter < vals.length * 2);
             coeffCounter = (Math.pow(base+1, vals.length) - 1 == coeffCounter) ? (int)Math.pow(++base, vals.length) : coeffCounter + 1;
-            //if(coeffCounter == 0) base++;
+            //System.out.println("Coeff counter: " + coeffCounter);
+            if(coeffCounter>10000) {
+                System.out.println("no working found");
+                return new int[]{0};
+            }
         }
     }
 
@@ -181,6 +190,44 @@ public class Main {
         int sum = 0;
         for(int i = 0; i < vals.length; i++) sum += vals[i] * coeffs[i] * signs[i];
         return sum == 1;
+    }
+
+    public static boolean testNextCol(int[] testCoeffs, int[] signs, int[][] matrix, int r) {
+        int[] nextCol = new int[matrix.length-r-1];
+        ArrayList<Integer[]> factors = new ArrayList<>();
+        int topNext = matrix[r][r+1];
+        int scaledTopNext = topNext * testCoeffs[0] * signs[0];
+        for(int i = r + 1; i < matrix.length; i++) {
+            scaledTopNext += matrix[i][r+1] * testCoeffs[i-r] * signs[i-r];
+        }
+        for(int i = 0; i < matrix.length-r-1; i++) {
+            nextCol[i] = matrix[i + r + 1][r+1] - scaledTopNext * matrix[i+r+1][r];
+            if(nextCol[i] == 1 || nextCol[i] == -1) return true;
+            if(nextCol[i]!=0) factors.add(Arrays.stream( primeFactors(nextCol[i]) ).boxed().toArray( Integer[]::new ));
+        }
+
+        if(factors.size()<=2) return true;
+
+        Integer[] f0 = factors.get(0);
+        boolean notFound = true;
+        for(int f : f0) {
+            for(int i = 1; i < factors.size(); i++) {
+                if(!contains(factors.get(i), f)) {
+                    break;
+                }
+                if(i+1 == factors.size()) return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean contains(final Integer[] array, final int key) {
+        for (final int i : array) {
+            if (i == key) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -191,13 +238,44 @@ public class Main {
         System.out.println();
     }
 
-    public static void printMatrix(int[][] matrix, BufferedWriter bw) throws IOException {
+    public static void printMatrix(int[][] matrix, int[] knot, BufferedWriter bw) throws IOException {
         StringBuilder sb = new StringBuilder();
         for (int[] i : matrix) {
             System.out.println(Arrays.toString(i));
             sb.append(Arrays.toString(i)).append("\n");
         }
         System.out.println();
-        bw.write(sb + "\n");
+        bw.write(knot[0] + ", " + knot[1] + ": ");
+        bw.write(Arrays.toString(primeFactors(matrix[matrix.length - 2][matrix.length - 2])) + "\n");
+        //bw.write(sb + "\n");
     }
+
+    public static int[] primeFactors(int n)
+    {
+        n = Math.abs(n);
+        ArrayList<Integer> factors = new ArrayList<>();
+        // Print the number of 2s that divide n
+        if(n==0) return new int[]{0};
+        while (n % 2 == 0) {
+            factors.add(2);
+            n /= 2;
+        }
+
+        // n must be odd at this point.  So we can
+        // skip one element (Note i = i +2)
+        for (int i = 3; i <= Math.sqrt(n); i += 2) {
+            // While i divides n, print i and divide n
+            while (n % i == 0) {
+                factors.add(i);
+                n /= i;
+            }
+        }
+
+        // This condition is to handle the case when
+        // n is a prime number greater than 2
+        if (n > 2)
+            factors.add(n);
+        return Arrays.stream(factors.toArray()).mapToInt(o -> (int)o).toArray();
+    }
+
 }
