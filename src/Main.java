@@ -56,7 +56,11 @@ public class Main {
         printMatrix(matrix);
         //*************
 
-        int[][] originalMatrix = 
+        int[][] originalMatrix = new int[matrix.length][];
+        for(int i = 0; i < matrix.length; i++)
+            originalMatrix[i] = matrix[i].clone();
+
+        ArrayList<Integer[]> chains = new ArrayList<>();
 
         //current column being worked on
         int lead = 0;
@@ -101,12 +105,12 @@ public class Main {
             if(leadVals.length == 2) {
                 return;
             }
-            int[] coeffs = new int[leadVals.length];
+
             for(i = 1; i < leadVals.length; i++) {
                 if(leadVals[i]!=0) break;
                 if(i == leadVals.length - 1) return;
             }
-            coeffs = findCoeffs(leadVals, matrix, r);
+            int[] coeffs = findCoeffs(leadVals, matrix, r);
 
             if(Arrays.equals(coeffs, new int[]{0})) return;
 
