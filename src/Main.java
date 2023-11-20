@@ -60,7 +60,7 @@ public class Main {
         for(int i = 0; i < matrix.length; i++)
             originalMatrix[i] = matrix[i].clone();
 
-        ArrayList<Integer[]> chains = new ArrayList<>();
+        ArrayList<ArrayList<int[]>> chains = new ArrayList<>();
 
         //current column being worked on
         int lead = 0;
@@ -71,6 +71,9 @@ public class Main {
 
         //goes through each row
         for (int r = 0; r < rowCount; r++) {
+
+            if(r==0) chains.add(new ArrayList<>());
+
             //if the lead is at the end of the row then the matrix is done
             if (lead >= colCount)
                 return;
@@ -110,9 +113,14 @@ public class Main {
                 if(leadVals[i]!=0) break;
                 if(i == leadVals.length - 1) return;
             }
-            int[] coeffs = findCoeffs(leadVals, matrix, r);
-
-            if(Arrays.equals(coeffs, new int[]{0})) return;
+            int[] coeffs = findCoeffs(leadVals, matrix, r, chains);
+            if(Arrays.equals(coeffs, new int[]{0})){
+                lead = 0;
+                matrix = originalMatrix.clone();
+                r = -1;
+                continue;
+            }
+            chains.get(chains.size()-1).add(coeffs);
 
             for(i = r; i < rowCount; i++) matrix[r][i] *= coeffs[0];
             for(i = r + 1; i < rowCount; i++) {
@@ -146,7 +154,7 @@ public class Main {
         }
     }
 
-    public static int[] findCoeffs(int[] vals, int[][] matrix, int r) {
+    public static int[] findCoeffs(int[] vals, int[][] matrix, int r, ArrayList<ArrayList<int[]>> chains) {
 
         //sign stored in a binary number - makes them easier to increment
         int signCounter = 0;
@@ -175,8 +183,8 @@ public class Main {
                 for(int i = 0; i < vals.length; i++) signStrArr[i] = String.valueOf(binarySign.toCharArray()[i]);
                 int[] signs = new int[vals.length];
                 for(int i = 0; i < vals.length; i++) signs[i] = signStrArr[i].equals("0") ? 1 : -1;
-                if(testCoefficients(vals, testCoeffs, signs) && testNextCol(testCoeffs, signs, matrix, r)) {
-                    for(int i = 0; i < vals.length; i++) testCoeffs[i] *= signs[i];
+                if(testCoefficients(vals, testCoeffs, signs) && testNextCol(testCoeffs, signs, matrix, r) && testAlreadyFound(testCoeffs, signs, chains)) {
+                    //for(int i = 0; i < vals.length; i++) testCoeffs[i] *= signs[i];
                     return testCoeffs;
                 }
                 signCounter++;
@@ -221,6 +229,16 @@ public class Main {
                 }
                 if(i+1 == factors.size()) return false;
             }
+        }
+        return true;
+    }
+
+    public static boolean testAlreadyFound(int[] testCoeffs, int[] signs, ArrayList<ArrayList<int[]>> chains) {
+        ArrayList<int[]> currentChain = (ArrayList<int[]>)chains.get(chains.size()-1).clone();
+        for(int i = 0; i < testCoeffs.length; i++) testCoeffs[i] *= signs[i];
+        currentChain.add(testCoeffs);
+        for(ArrayList<int[]> i : chains) {
+            if(i.equals(currentChain)) return false;
         }
         return true;
     }
